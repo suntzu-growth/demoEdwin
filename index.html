@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartUp Prospectos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
+
+    <div id="app" class="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Registro de Prospecto</h2>
+        
+        <form id="prospectForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Nombre</label>
+                <input type="text" id="nombre" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">E-mail</label>
+                <input type="email" id="email" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Empresa</label>
+                <input type="text" id="empresa" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Comentarios</label>
+                <textarea id="comentarios" rows="3" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+            </div>
+            <button type="submit" id="btnSubmit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition font-semibold">
+                Obtener Resumen
+            </button>
+        </form>
+
+        <div id="summarySection" class="hidden space-y-4">
+            <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h3 class="font-bold text-blue-800 mb-2">Resumen generado:</h3>
+                <p id="summaryText" class="text-sm text-blue-900 leading-relaxed"></p>
+            </div>
+            <div class="flex space-x-3">
+                <button onclick="confirmarEnvio(true)" class="flex-1 bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition font-semibold">✓ Confirmar y Enviar</button>
+                <button onclick="location.reload()" class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-md hover:bg-gray-300 transition">Cancelar</button>
+            </div>
+        </div>
+
+        <p id="statusMsg" class="mt-4 text-center text-sm font-medium hidden"></p>
+    </div>
+
+    <script>
+        const webhookUrl = '/api/proxy';
+        let datosTemporales = {};
+
+        document.getElementById('prospectForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmit');
+            const msg = document.getElementById('statusMsg');
+            
+            // Guardar datos
+            datosTemporales = {
+                nombre: document.getElementById('nombre').value,
+                email: document.getElementById('email').value,
+                empresa: document.getElementById('empresa').value,
+                comentarios: document.getElementById('comentarios').value,
+                accion: 'obtener_resumen'
+            };
+
+            btn.disabled = true;
+            btn.innerText = 'Procesando...';
+            msg.innerText = 'Conectando con n8n...';
+            msg.classList.remove('hidden');
+
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datosTemporales)
+                });
+
+                const data = await response.json();
+                
+                // Mostrar resumen
+                document.getElementById('prospectForm').classList.add('hidden');
+                document.getElementById('summarySection').classList.remove('hidden');
+                document.getElementById('summaryText').innerText = data.resumen || "Resumen recibido correctamente.";
+                msg.classList.add('hidden');
+
+            } catch (error) {
+                msg.innerText = 'Error al conectar. Revisa el webhook.';
+                msg.classList.add('text-red-500');
+                btn.disabled = false;
+                btn.innerText = 'Obtener Resumen';
+            }
+        });
+
+        async function confirmarEnvio(confirmado) {
+            const msg = document.getElementById('statusMsg');
+            msg.innerText = 'Enviando a HubSpot...';
+            msg.classList.remove('hidden', 'text-red-500');
+            
+            try {
+                await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...datosTemporales, accion: 'confirmar_envio' })
+                });
+                
+                document.getElementById('app').innerHTML = `
+                    <div class="text-center py-8">
+                        <div class="text-green-500 text-5xl mb-4">✓</div>
+                        <h2 class="text-2xl font-bold mb-2">¡Todo listo!</h2>
+                        <p class="text-gray-600">El contacto ha sido creado y el email enviado.</p>
+                        <button onclick="location.reload()" class="mt-6 text-blue-600 underline">Nuevo registro</button>
+                    </div>`;
+            } catch (error) {
+                msg.innerText = 'Error al confirmar.';
+            }
+        }
+    </script>
+</body>
+</html>
