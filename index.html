@@ -3,139 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartUp Prospectos</title>
+    <title>SmartUp | Prospect Intelligence Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .prose h1, .prose h2, .prose h3 { color: #1e293b; font-weight: 700; margin-top: 1.5em; }
+        .prose p { margin-bottom: 1em; color: #475569; }
+        .prose ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1em; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
 </head>
-<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
+<body class="bg-slate-50 min-h-screen flex flex-col">
 
-    <div id="app" class="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Registro de Prospecto</h2>
-        
-        <form id="prospectForm" class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Nombre</label>
-                <input type="text" id="nombre" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">E-mail</label>
-                <input type="email" id="email" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Empresa</label>
-                <input type="text" id="empresa" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Comentarios</label>
-                <textarea id="comentarios" rows="3" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
-            </div>
-            <button type="submit" id="btnSubmit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition font-semibold">
-                Obtener Resumen
-            </button>
-        </form>
-
-        <div id="summarySection" class="hidden space-y-4">
-            <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <h3 class="font-bold text-blue-800 mb-2">Resumen generado:</h3>
-                <p id="summaryText" class="text-sm text-blue-900 leading-relaxed"></p>
-            </div>
-            <div class="flex space-x-3">
-                <button onclick="confirmarEnvio(true)" class="flex-1 bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition font-semibold">✓ Confirmar y Enviar</button>
-                <button onclick="location.reload()" class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-md hover:bg-gray-300 transition">Cancelar</button>
-            </div>
+    <header class="bg-white border-b border-slate-200 py-4 px-8 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <div class="bg-blue-600 text-white p-2 rounded-lg font-bold text-xl">S</div>
+            <h1 class="text-xl font-bold text-slate-800 tracking-tight">SmartUp <span class="text-blue-600">Prospector</span></h1>
         </div>
+        <div class="text-sm text-slate-500 font-medium">v2.0 Beta · AI Enabled</div>
+    </header>
 
-        <p id="statusMsg" class="mt-4 text-center text-sm font-medium hidden"></p>
-    </div>
-
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
-<div id="summarySection" class="hidden space-y-4">
-    <div class="p-6 bg-white rounded-lg border border-gray-200 shadow-inner max-h-[500px] overflow-y-auto">
-        <h3 class="font-bold text-xl text-blue-800 mb-4 border-b pb-2">📋 Reporte de Investigación</h3>
-        <div id="summaryText" class="prose prose-blue text-gray-800 leading-relaxed text-sm"></div>
-    </div>
-    <div class="flex space-x-3">
-        <button onclick="confirmarEnvio()" class="flex-1 bg-green-600 text-white py-3 rounded-md hover:bg-green-700 transition font-bold shadow-lg">✓ Confirmar y Enviar a HubSpot</button>
-        <button onclick="location.reload()" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-md hover:bg-gray-200 transition">Cancelar</button>
-    </div>
-</div>
-
-<script>
-    const webhookUrl = '/api/proxy';
-    let datosTemporales = {};
-
-    document.getElementById('prospectForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('btnSubmit');
-        const msg = document.getElementById('statusMsg');
+    <main class="flex-1 flex overflow-hidden">
         
-        datosTemporales = {
-            nombre: document.getElementById('nombre').value,
-            email: document.getElementById('email').value,
-            empresa: document.getElementById('empresa').value,
-            comentarios: document.getElementById('comentarios').value,
-            accion: 'obtener_resumen'
-        };
+        <aside class="w-full lg:w-[400px] bg-white border-r border-slate-200 p-8 overflow-y-auto custom-scroll">
+            <div class="mb-8">
+                <h2 class="text-lg font-semibold text-slate-800">Entrada de Datos</h2>
+                <p class="text-sm text-slate-500">Introduce la información del prospecto para iniciar la investigación.</p>
+            </div>
 
-        btn.disabled = true;
-        btn.innerHTML = '<span class="animate-pulse">Investigando... (puede tardar 20s)</span>';
-        msg.innerText = 'La IA está analizando la empresa en internet...';
-        msg.classList.remove('hidden');
+            <form id="prospectForm" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Nombre de la Persona</label>
+                    <input type="text" id="nombre" required placeholder="Juan Pérez" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition text-slate-700">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">E-mail Corporativo</label>
+                    <input type="email" id="email" required placeholder="juan@empresa.com" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition text-slate-700">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Empresa</label>
+                    <input type="text" id="empresa" required placeholder="Nombre de la compañía" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition text-slate-700">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Comentarios / Notas</label>
+                    <textarea id="comentarios" rows="4" placeholder="¿Qué buscas con este contacto?" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition text-slate-700"></textarea>
+                </div>
+                
+                <button type="submit" id="btnSubmit" class="w-full bg-slate-900 text-white py-4 rounded-xl hover:bg-blue-600 transition-all font-bold text-sm shadow-lg shadow-slate-200 flex items-center justify-center gap-2">
+                    <span>Iniciar Investigación</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                </button>
+            </form>
 
-        try {
-            const response = await fetch(webhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(datosTemporales)
-            });
+            <div id="statusMsg" class="mt-6 p-4 rounded-lg bg-blue-50 text-blue-700 text-xs font-medium hidden border border-blue-100"></div>
+        </aside>
 
-            const data = await response.json();
+        <section class="flex-1 bg-slate-50 overflow-y-auto custom-scroll p-8 lg:p-12 relative" id="mainDisplay">
             
-            // IMPORTANTE: Aquí leemos 'output' que es lo que envía tu n8n
-            const rawText = data.output || data.resumen || "No se pudo generar el reporte.";
-            
-            // Convertimos el Markdown de la IA a HTML bonito
-            document.getElementById('summaryText').innerHTML = marked.parse(rawText);
-            
-            document.getElementById('prospectForm').classList.add('hidden');
-            document.getElementById('summarySection').classList.remove('hidden');
-            msg.classList.add('hidden');
+            <div id="emptyState" class="h-full flex flex-col items-center justify-center text-center opacity-40">
+                <div class="bg-slate-200 p-6 rounded-full mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                </div>
+                <h3 class="text-xl font-medium text-slate-600">Esperando datos</h3>
+                <p class="text-slate-500 max-w-xs">El reporte de inteligencia aparecerá aquí una vez inicies la investigación.</p>
+            </div>
 
-        } catch (error) {
-            msg.innerText = 'Error de conexión. Revisa los logs de Vercel.';
-            btn.disabled = false;
-            btn.innerText = 'Obtener Resumen';
-        }
-    });
-    let reporteGenerado = "";
-    reporteGenerado = data.output || data.resumen;
-    async function confirmarEnvio() {
-        const msg = document.getElementById('statusMsg');
-        msg.innerText = 'Enviando a HubSpot y Gmail...';
-        msg.classList.remove('hidden');
-        
-        try {
-            await fetch(webhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                ...datosTemporales, 
-                accion: 'confirmar_envio',
-                reporte_aprobado: reporteGenerado // <--- ENVIAMOS EL TEXTO AQUÍ
-            })
+            <div id="loader" class="hidden h-full flex flex-col items-center justify-center text-center">
+                <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <h3 class="text-xl font-bold text-slate-800">La IA está trabajando</h3>
+                <p class="text-slate-500">Buscando noticias, perfiles y datos estratégicos...</p>
+            </div>
+
+            <div id="summarySection" class="hidden max-w-3xl mx-auto">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
+                    <div class="bg-slate-900 px-8 py-4 flex justify-between items-center">
+                        <span class="text-white text-xs font-bold uppercase tracking-widest">Inteligencia Estratégica</span>
+                        <span class="text-slate-400 text-xs">Análisis en tiempo real</span>
+                    </div>
+                    <div class="p-8 lg:p-12 prose prose-slate max-w-none" id="summaryText">
+                        </div>
+                </div>
+
+                <div class="flex items-center gap-4 pb-12">
+                    <button onclick="confirmarEnvio()" class="flex-1 bg-emerald-600 text-white py-5 rounded-2xl hover:bg-emerald-700 transition font-bold shadow-xl shadow-emerald-100 flex items-center justify-center gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                        Confirmar y Sincronizar HubSpot
+                    </button>
+                    <button onclick="location.reload()" class="px-8 py-5 bg-white text-slate-500 rounded-2xl hover:bg-slate-100 transition font-semibold border border-slate-200">
+                        Descartar
+                    </button>
+                </div>
+            </div>
+
+            <div id="successState" class="hidden h-full flex flex-col items-center justify-center text-center">
+                <div class="bg-emerald-100 text-emerald-600 p-6 rounded-full mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                </div>
+                <h2 class="text-4xl font-bold text-slate-800 mb-4">¡Proceso Completado!</h2>
+                <p class="text-slate-500 text-lg mb-8 max-w-md">El contacto ha sido creado en HubSpot y el email personalizado ha sido enviado correctamente.</p>
+                <button onclick="location.reload()" class="bg-blue-600 text-white px-10 py-4 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-100">Nuevo Registro</button>
+            </div>
+
+        </section>
+    </main>
+
+    <script>
+        const proxyUrl = '/api/proxy';
+        let datosTemporales = {};
+        let reporteDeIA = "";
+
+        document.getElementById('prospectForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmit');
+            const msg = document.getElementById('statusMsg');
+            
+            datosTemporales = {
+                nombre: document.getElementById('nombre').value,
+                email: document.getElementById('email').value,
+                empresa: document.getElementById('empresa').value,
+                comentarios: document.getElementById('comentarios').value,
+                accion: 'obtener_resumen'
+            };
+
+            // UI Changes
+            btn.disabled = true;
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('loader').classList.remove('hidden');
+            msg.innerText = 'Conectando con n8n y ejecutando investigación...';
+            msg.classList.remove('hidden');
+
+            try {
+                const response = await fetch(proxyUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datosTemporales)
+                });
+
+                const data = await response.json();
+                reporteDeIA = data.resumen || data.output || "";
+                
+                if (!reporteDeIA) throw new Error("No data");
+
+                // Render Report
+                document.getElementById('loader').classList.add('hidden');
+                document.getElementById('summarySection').classList.remove('hidden');
+                document.getElementById('summaryText').innerHTML = marked.parse(reporteDeIA);
+                msg.classList.add('hidden');
+
+            } catch (error) {
+                msg.innerText = 'Error en la conexión. Revisa Vercel/n8n.';
+                msg.classList.add('bg-red-50', 'text-red-600');
+                btn.disabled = false;
+            }
         });
+
+        async function confirmarEnvio() {
+            const msg = document.getElementById('statusMsg');
+            msg.innerText = 'Sincronizando con HubSpot...';
+            msg.classList.remove('hidden');
             
-            document.getElementById('app').innerHTML = `
-                <div class="text-center py-12">
-                    <div class="bg-green-100 text-green-600 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">✓</div>
-                    <h2 class="text-3xl font-bold text-gray-800 mb-2">¡Éxito Total!</h2>
-                    <p class="text-gray-600 mb-8">El contacto está en HubSpot y el email ha sido enviado.</p>
-                    <button onclick="location.reload()" class="bg-blue-600 text-white px-8 py-3 rounded-full hover:bg-blue-700 transition shadow-md">Nuevo Registro</button>
-                </div>`;
-        } catch (error) {
-            msg.innerText = 'Error al confirmar.';
+            try {
+                const response = await fetch(proxyUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        ...datosTemporales, 
+                        accion: 'confirmar_envio',
+                        reporte_aprobado: reporteDeIA
+                    })
+                });
+
+                if (!response.ok) throw new Error("Sync failed");
+                
+                // Show Success
+                document.getElementById('summarySection').classList.add('hidden');
+                document.getElementById('successState').classList.remove('hidden');
+                msg.classList.add('hidden');
+
+            } catch (error) {
+                msg.innerText = 'Error al sincronizar datos.';
+                msg.classList.add('text-red-600');
+            }
         }
-    }
-</script>
+    </script>
 </body>
 </html>
