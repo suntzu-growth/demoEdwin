@@ -107,7 +107,8 @@
             btn.innerText = 'Obtener Resumen';
         }
     });
-
+    let reporteGenerado = "";
+    reporteGenerado = data.output || data.resumen;
     async function confirmarEnvio() {
         const msg = document.getElementById('statusMsg');
         msg.innerText = 'Enviando a HubSpot y Gmail...';
@@ -115,10 +116,14 @@
         
         try {
             await fetch(webhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...datosTemporales, accion: 'confirmar_envio' })
-            });
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                ...datosTemporales, 
+                accion: 'confirmar_envio',
+                reporte_aprobado: reporteGenerado // <--- ENVIAMOS EL TEXTO AQUÍ
+            })
+        });
             
             document.getElementById('app').innerHTML = `
                 <div class="text-center py-12">
