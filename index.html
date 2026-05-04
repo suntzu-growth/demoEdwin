@@ -47,75 +47,90 @@
         <p id="statusMsg" class="mt-4 text-center text-sm font-medium hidden"></p>
     </div>
 
-    <script>
-        const webhookUrl = '/api/proxy';
-        let datosTemporales = {};
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-        document.getElementById('prospectForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btnSubmit');
-            const msg = document.getElementById('statusMsg');
+<div id="summarySection" class="hidden space-y-4">
+    <div class="p-6 bg-white rounded-lg border border-gray-200 shadow-inner max-h-[500px] overflow-y-auto">
+        <h3 class="font-bold text-xl text-blue-800 mb-4 border-b pb-2">📋 Reporte de Investigación</h3>
+        <div id="summaryText" class="prose prose-blue text-gray-800 leading-relaxed text-sm"></div>
+    </div>
+    <div class="flex space-x-3">
+        <button onclick="confirmarEnvio()" class="flex-1 bg-green-600 text-white py-3 rounded-md hover:bg-green-700 transition font-bold shadow-lg">✓ Confirmar y Enviar a HubSpot</button>
+        <button onclick="location.reload()" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-md hover:bg-gray-200 transition">Cancelar</button>
+    </div>
+</div>
+
+<script>
+    const webhookUrl = '/api/proxy';
+    let datosTemporales = {};
+
+    document.getElementById('prospectForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btnSubmit');
+        const msg = document.getElementById('statusMsg');
+        
+        datosTemporales = {
+            nombre: document.getElementById('nombre').value,
+            email: document.getElementById('email').value,
+            empresa: document.getElementById('empresa').value,
+            comentarios: document.getElementById('comentarios').value,
+            accion: 'obtener_resumen'
+        };
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="animate-pulse">Investigando... (puede tardar 20s)</span>';
+        msg.innerText = 'La IA está analizando la empresa en internet...';
+        msg.classList.remove('hidden');
+
+        try {
+            const response = await fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datosTemporales)
+            });
+
+            const data = await response.json();
             
-            // Guardar datos
-            datosTemporales = {
-                nombre: document.getElementById('nombre').value,
-                email: document.getElementById('email').value,
-                empresa: document.getElementById('empresa').value,
-                comentarios: document.getElementById('comentarios').value,
-                accion: 'obtener_resumen'
-            };
-
-            btn.disabled = true;
-            btn.innerText = 'Procesando...';
-            msg.innerText = 'Conectando con n8n...';
-            msg.classList.remove('hidden');
-
-            try {
-                const response = await fetch(webhookUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(datosTemporales)
-                });
-
-                const data = await response.json();
-                
-                // Mostrar resumen
-                document.getElementById('prospectForm').classList.add('hidden');
-                document.getElementById('summarySection').classList.remove('hidden');
-                document.getElementById('summaryText').innerText = data.resumen || "Resumen recibido correctamente.";
-                msg.classList.add('hidden');
-
-            } catch (error) {
-                msg.innerText = 'Error al conectar. Revisa el webhook.';
-                msg.classList.add('text-red-500');
-                btn.disabled = false;
-                btn.innerText = 'Obtener Resumen';
-            }
-        });
-
-        async function confirmarEnvio(confirmado) {
-            const msg = document.getElementById('statusMsg');
-            msg.innerText = 'Enviando a HubSpot...';
-            msg.classList.remove('hidden', 'text-red-500');
+            // IMPORTANTE: Aquí leemos 'output' que es lo que envía tu n8n
+            const rawText = data.output || data.resumen || "No se pudo generar el reporte.";
             
-            try {
-                await fetch(webhookUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ...datosTemporales, accion: 'confirmar_envio' })
-                });
-                
-                document.getElementById('app').innerHTML = `
-                    <div class="text-center py-8">
-                        <div class="text-green-500 text-5xl mb-4">✓</div>
-                        <h2 class="text-2xl font-bold mb-2">¡Todo listo!</h2>
-                        <p class="text-gray-600">El contacto ha sido creado y el email enviado.</p>
-                        <button onclick="location.reload()" class="mt-6 text-blue-600 underline">Nuevo registro</button>
-                    </div>`;
-            } catch (error) {
-                msg.innerText = 'Error al confirmar.';
-            }
+            // Convertimos el Markdown de la IA a HTML bonito
+            document.getElementById('summaryText').innerHTML = marked.parse(rawText);
+            
+            document.getElementById('prospectForm').classList.add('hidden');
+            document.getElementById('summarySection').classList.remove('hidden');
+            msg.classList.add('hidden');
+
+        } catch (error) {
+            msg.innerText = 'Error de conexión. Revisa los logs de Vercel.';
+            btn.disabled = false;
+            btn.innerText = 'Obtener Resumen';
         }
-    </script>
+    });
+
+    async function confirmarEnvio() {
+        const msg = document.getElementById('statusMsg');
+        msg.innerText = 'Enviando a HubSpot y Gmail...';
+        msg.classList.remove('hidden');
+        
+        try {
+            await fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...datosTemporales, accion: 'confirmar_envio' })
+            });
+            
+            document.getElementById('app').innerHTML = `
+                <div class="text-center py-12">
+                    <div class="bg-green-100 text-green-600 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">✓</div>
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">¡Éxito Total!</h2>
+                    <p class="text-gray-600 mb-8">El contacto está en HubSpot y el email ha sido enviado.</p>
+                    <button onclick="location.reload()" class="bg-blue-600 text-white px-8 py-3 rounded-full hover:bg-blue-700 transition shadow-md">Nuevo Registro</button>
+                </div>`;
+        } catch (error) {
+            msg.innerText = 'Error al confirmar.';
+        }
+    }
+</script>
 </body>
 </html>
