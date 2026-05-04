@@ -133,7 +133,7 @@
             btn.disabled = true;
             document.getElementById('emptyState').classList.add('hidden');
             document.getElementById('loader').classList.remove('hidden');
-            msg.innerText = 'Conectando con n8n y ejecutando investigación...';
+            msg.innerText = 'Conectando con la IA y ejecutando investigación...';
             msg.classList.remove('hidden');
 
             try {
@@ -161,34 +161,54 @@
             }
         });
 
-        async function confirmarEnvio() {
-            const msg = document.getElementById('statusMsg');
-            msg.innerText = 'Sincronizando con HubSpot...';
-            msg.classList.remove('hidden');
-            
-            try {
-                const response = await fetch(proxyUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        ...datosTemporales, 
-                        accion: 'confirmar_envio',
-                        reporte_aprobado: reporteDeIA
-                    })
-                });
+       async function confirmarEnvio() {
+    // 1. Identificar el botón y el mensaje
+    const btnConfirmar = document.querySelector('#summarySection button[onclick="confirmarEnvio()"]');
+    const msg = document.getElementById('statusMsg');
+    
+    // 2. BLOQUEAR EL BOTÓN INMEDIATAMENTE
+    btnConfirmar.disabled = true;
+    btnConfirmar.classList.add('opacity-50', 'cursor-not-allowed'); 
+    btnConfirmar.innerHTML = `
+        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        Sincronizando...
+    `;
 
-                if (!response.ok) throw new Error("Sync failed");
-                
-                // Show Success
-                document.getElementById('summarySection').classList.add('hidden');
-                document.getElementById('successState').classList.remove('hidden');
-                msg.classList.add('hidden');
+    msg.innerText = 'Procesando datos en HubSpot y enviando email...';
+    msg.classList.remove('hidden', 'text-red-600');
+    
+    try {
+        const response = await fetch(proxyUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                ...datosTemporales, 
+                accion: 'confirmar_envio',
+                reporte_aprobado: reporteDeIA
+            })
+        });
 
-            } catch (error) {
-                msg.innerText = 'Error al sincronizar datos.';
-                msg.classList.add('text-red-600');
-            }
-        }
+        if (!response.ok) throw new Error("Sync failed");
+        
+        // 3. OCULTAR TODO Y MOSTRAR ÉXITO
+        // Al mostrar 'successState', el botón bloqueado desaparece de la vista.
+        document.getElementById('summarySection').classList.add('hidden');
+        document.getElementById('successState').classList.remove('hidden');
+        msg.classList.add('hidden');
+
+    } catch (error) {
+        // 4. SI HAY ERROR, REHABILITAR PARA REINTENTAR
+        msg.innerText = 'Error al sincronizar. Inténtalo de nuevo.';
+        msg.classList.add('text-red-600');
+        
+        btnConfirmar.disabled = false;
+        btnConfirmar.classList.remove('opacity-50', 'cursor-not-allowed');
+        btnConfirmar.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+            Confirmar y Sincronizar HubSpot
+        `;
+    }
+}
     </script>
 </body>
 </html>
